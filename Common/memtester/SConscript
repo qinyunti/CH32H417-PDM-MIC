@@ -1,0 +1,17 @@
+import os
+import sys
+
+Import('env')
+cwd = Dir('.').srcnode().abspath
+
+inc = [
+    os.path.join(cwd, 'inc')
+]
+
+sources = Glob(os.path.join('src', '*.[cS]'))
+
+ccflags = ["-Wno-incompatible-pointer-types"]
+
+mod = env.WQModule(src=sources, pub_inc=inc,flags = ccflags)
+
+Return('mod')

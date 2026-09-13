@@ -1,0 +1,72 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "mrs-debugger",
+			"request": "launch",
+			"name": "test_V5F",
+			"cwd": "d:\\BaiduSyncdisk\\BOARD\\CH32H417QEU6-EVT-R1\\proj\\V5F",
+			"openOCDCfg": {
+				"useLocalOpenOCD": true,
+				"executable": "d:/MounRiver/MounRiver_Studio2/resources/app/resources/win32/components/WCH/OpenOCD/OpenOCD/bin/openocd.exe",
+				"configOptions": [
+					"-f \"d:/MounRiver/MounRiver_Studio2/resources/app/resources/win32/components/WCH/OpenOCD/OpenOCD/bin/wch-dual-core.cfg\" -c \"chip_id CH32H417\""
+				],
+				"gdbport": 3334,
+				"telnetport": 4444,
+				"tclport": 6666,
+				"host": "127.0.0.1",
+				"port": 3333,
+				"skipDownloadBeforeDebug": false,
+				"enablePageEraser": false,
+				"enableNoZeroWaitingAreaFlash": false
+			},
+			"gdbCfg": {
+				"executable": "d:/MounRiver/MounRiver_Studio2/resources/app/resources/win32/components/WCH/Toolchain/RISC-V Embedded GCC12/bin/riscv-wch-elf-gdb.exe",
+				"commands": [
+					"set mem inaccessible-by-default off",
+					"set architecture riscv:rv32",
+					"set remotetimeout unlimited",
+					"set disassembler-options xw"
+				],
+				"options": []
+			},
+			"startup": {
+				"initCommands": {
+					"initReset": true,
+					"initResetType": "init",
+					"armSemihosting": false,
+					"additionalCommands": []
+				},
+				"loadedFiles": {
+					"executableFile": "d:\\BaiduSyncdisk\\BOARD\\CH32H417QEU6-EVT-R1\\proj\\V5F\\obj\\test_V5F.elf",
+					"symbolFile": "d:\\BaiduSyncdisk\\BOARD\\CH32H417QEU6-EVT-R1\\proj\\V5F\\obj\\test_V5F.elf",
+					"executableFileOffset": 0,
+					"symbolFileOffset": 0,
+					"dualCoreExecutableFiles": [
+						"d:\\BaiduSyncdisk\\BOARD\\CH32H417QEU6-EVT-R1\\proj\\V5F\\obj\\test_V5F.elf",
+						"d:\\BaiduSyncdisk\\BOARD\\CH32H417QEU6-EVT-R1\\proj\\V3F\\obj\\test_V3F.elf"
+					]
+				},
+				"runCommands": {
+					"runReset": false,
+					"runResetType": "halt",
+					"additionalCommands": [],
+					"setBreakAt": "handle_reset",
+					"continue": true,
+					"setProgramCounterAt": 0
+				},
+				"debugInRAM": false
+			},
+			"svdpath": "",
+			"output": {
+				"showDebugGDBTrace": true,
+				"saveDebugOutputToFile": false,
+				"showDebugOutputTimestamps": true
+			},
+			"isDualCoreDebug": true,
+			"dualCoreDebugRole": "slave",
+			"architecture": "RISC-V"
+		}
+	]
+}
