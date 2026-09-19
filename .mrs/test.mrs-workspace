@@ -14,7 +14,7 @@
 	],
 	"settings": {
 		"mrs.workspace.type": "solution",
-		"mrs.workspace.slnLoaded": "D:\\BaiduSyncdisk\\BOARD\\CH32H417QEU6-EVT-R1\\proj\\test.wvsln",
+		"mrs.workspace.slnLoaded": "D:\\BaiduSyncdisk\\BOARD\\CH32H417QEU6-EVT-R1\\proj\\CH32H417-PDM-MIC\\test.wvsln",
 		"mrs.init.arg": "",
 		"files.associations": {
 			"*.c": "c",

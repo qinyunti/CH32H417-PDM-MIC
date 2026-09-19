@@ -58,7 +58,7 @@ main-build: test_V5F.elf secondary-outputs
 
 # Tool invocations
 test_V5F.elf: $(OBJS) $(USER_OBJS_ESCAPE)
-	@	riscv-wch-elf-gcc -march=rv32imac_zba_zbb_zbc_zbs_xw -mabi=ilp32 -msmall-data-limit=8 -msave-restore -fmax-errors=20 -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized -g -T "d:\BaiduSyncdisk\BOARD\CH32H417QEU6-EVT-R1\proj\SRC\Ld\V5F\Link_v5f.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"test_V5F.map" --specs=nano.specs --specs=nosys.specs -o "test_V5F.elf" $(OBJS) $(LIBS)
+	@	riscv-wch-elf-gcc -march=rv32imac_zba_zbb_zbc_zbs_xw -mabi=ilp32 -msmall-data-limit=8 -msave-restore -fmax-errors=20 -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized -g -T "d:\BaiduSyncdisk\BOARD\CH32H417QEU6-EVT-R1\proj\CH32H417-PDM-MIC\SRC\Ld\V5F\Link_v5f.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"test_V5F.map" --specs=nano.specs --specs=nosys.specs -o "test_V5F.elf" $(OBJS) $(LIBS)
 test_V5F.bin: test_V5F.elf
 	@	riscv-wch-elf-objcopy -O binary "test_V5F.elf" "test_V5F.bin"
 test_V5F.hex: test_V5F.elf

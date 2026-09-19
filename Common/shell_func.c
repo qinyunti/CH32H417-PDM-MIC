@@ -16,6 +16,7 @@ static void printmemfunc(uint8_t* param);
 static void setmemfunc(uint8_t* param);
 
 static void micrecfunc(uint8_t* param);
+static void spkplayfunc(uint8_t* param);
 
 /**
  * 最后一行必须为0,用于结束判断
@@ -28,7 +29,7 @@ const shell_cmd_cfg g_shell_cmd_list_ast[ ] =
   { (uint8_t*)"printmem",     printmemfunc,     (uint8_t*)"printmem mode[hex/dec] addr[hex] len datasize[8/16/32] sig[1/0]"}, 
   { (uint8_t*)"setmem",       setmemfunc,       (uint8_t*)"setmem addr[hex] val[hex]"}, 
   { (uint8_t*)"micrec",       micrecfunc,       (uint8_t*)"micrec addr[HEX] samps"}, 
-
+  { (uint8_t*)"spkplay",      spkplayfunc,      (uint8_t*)"spkplay addr[HEX]"}, 
   { (uint8_t*)0,		          0 ,               0},
 };
 
@@ -335,6 +336,22 @@ static void micrecfunc(uint8_t* param)
     {
       xprintf("[MIC]:%x,samples:%d\r\n",addr,samples);
       mic_rec_start(addr, samples);
+    }
+    else
+    {
+      xprintf("param err\r\n");
+    }
+}
+
+
+extern void spk_play_start(uint32_t addr);
+static void spkplayfunc(uint8_t* param)
+{
+    uint32_t addr;
+    if(1 == sscanf((const char*)param, "%*s %lx", &addr))
+    {
+      spk_play_start(addr);
+      xprintf("[SPK]: start %x\r\n",addr);
     }
     else
     {

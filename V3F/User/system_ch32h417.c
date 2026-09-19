@@ -17,11 +17,11 @@
 * reset the HSI is used as SYSCLK source).
 * If none of the define below is enabled, the HSI is used as System clock source. 
 */
-#define SYSCLK_400M_CoreCLK_V5F_400M_V3F_100M_HSE    400000000
+// #define SYSCLK_400M_CoreCLK_V5F_400M_V3F_100M_HSE    400000000
 // #define SYSCLK_480M_CoreCLK_V5F_240M_V3F_120M_HSE    480000000
 // #define SYSCLK_400M_CoreCLK_V5F_400M_V3F_100M_HSI    400000000
 // #define SYSCLK_480M_CoreCLK_V5F_240M_V3F_120M_HSI    480000000
-
+#define SYSCLK_295M_CoreCLK_V5F_295M_V3F_147M_HSE       295000000     
 /*Only suitable for commercial applications, with a temperature not exceeding 70 ℃ and good heat dissipation*/
 /* // #define SYSCLK_480M_CoreCLK_V5F_480M_V3F_120M_HSE    480000000
 // #define SYSCLK_480M_CoreCLK_V5F_480M_V3F_120M_HSI    480000000 */
@@ -49,7 +49,9 @@ uint32_t SystemCoreClock = 120000000;
 uint32_t SystemClock = SYSCLK_480M_CoreCLK_V5F_480M_V3F_120M_HSI;         /* System Clock Frequency */
 uint32_t SystemCoreClock = 120000000;
 
-
+#elif defined SYSCLK_295M_CoreCLK_V5F_295M_V3F_147M_HSE
+uint32_t SystemClock = SYSCLK_295M_CoreCLK_V5F_295M_V3F_147M_HSE;         /* System Clock Frequency */
+uint32_t SystemCoreClock = 147500000;
 
 #else
 
@@ -80,7 +82,8 @@ static void SetSYSCLK_480M_CoreCLK_V5F_240M_V3F_120M_HSI( void );
 static void SetSYSCLK_480M_CoreCLK_V5F_480M_V3F_120M_HSE( void );
 #elif defined SYSCLK_480M_CoreCLK_V5F_480M_V3F_120M_HSI
 static void SetSYSCLK_480M_CoreCLK_V5F_480M_V3F_120M_HSI( void );
-
+#elif defined SYSCLK_295M_CoreCLK_V5F_295M_V3F_147M_HSE
+static void SetSYSCLK_295M_CoreCLK_V5F_295M_V3F_147M_HSE( void );
 #endif
 
 /*********************************************************************
@@ -142,6 +145,8 @@ static void SetSysClock(void)
     SetSYSCLK_480M_CoreCLK_V5F_480M_V3F_120M_HSE();
 #elif defined SYSCLK_480M_CoreCLK_V5F_480M_V3F_120M_HSI
     SetSYSCLK_480M_CoreCLK_V5F_480M_V3F_120M_HSI();
+#elif defined SYSCLK_295M_CoreCLK_V5F_295M_V3F_147M_HSE
+    SetSYSCLK_295M_CoreCLK_V5F_295M_V3F_147M_HSE();
 
 #endif
  
@@ -784,4 +789,102 @@ static void SetSYSCLK_480M_CoreCLK_V5F_480M_V3F_120M_HSI(void)
   } 
 }
 
+#elif SYSCLK_295M_CoreCLK_V5F_295M_V3F_147M_HSE
+/* V5F 最高频率 400MHz，V3F 最高频率 160MHz */
+/*********************************************************************
+ * @fn      SetSYSCLK_295M_CoreCLK_V5F_295M_V3F_147M_HSE
+ *
+ * @brief   Sets System clock frequency to 295MHz.
+ *          Sets V5F Core clock frequency to 295MHz.
+ *          Sets V3F Core clock frequency to 147.5MHz.
+ *          configure HCLK prescalers.
+ *
+ * @return  none
+ */
+static void SetSYSCLK_295M_CoreCLK_V5F_295M_V3F_147M_HSE(void)
+{
+  __IO uint32_t StartUpCounter = 0, HSEStatus = 0, FLASH_Temp = 0;
+   
+  RCC->CTLR |= ((uint32_t)RCC_HSEON);
+ 
+  /* Wait till HSE is ready and if Time out is reached exit */
+  do
+  {
+    HSEStatus = RCC->CTLR & RCC_HSERDY;
+    StartUpCounter++;  
+  } while((HSEStatus == 0) && (StartUpCounter != HSE_STARTUP_TIMEOUT));
+
+  if ((RCC->CTLR & RCC_HSERDY) != RESET)
+  {
+    HSEStatus = (uint32_t)0x01;
+  }
+  else
+  {
+    HSEStatus = (uint32_t)0x00;
+  }  
+
+  if (HSEStatus == (uint32_t)0x01)
+  {
+    /* configure PLL Clock */  
+    RCC->PLLCFGR &= (uint32_t)((uint32_t)~(RCC_PLLMUL)); 
+    RCC->PLLCFGR |= (uint32_t)RCC_PLLMUL59;   
+    RCC->PLLCFGR &= (uint32_t)((uint32_t)~(RCC_PLL_SRC_DIV)); 
+    RCC->PLLCFGR |= (uint32_t)RCC_PLL_SRC_DIV5;
+    RCC->PLLCFGR &= (uint32_t)((uint32_t)~(RCC_PLLSRC)); 
+    RCC->PLLCFGR |= (uint32_t)RCC_PLLSRC_HSE;
+
+    /* Wait till HSE clock is used as PLL clock source */
+    while ((RCC->PLLCFGR & (uint32_t)RCC_PLLSRC) != (uint32_t)RCC_PLLSRC_HSE)
+    {
+    }     
+
+    /* Enable PLL */
+    RCC->CTLR |= RCC_PLLON;
+
+    /* Wait till PLL is ready */
+    while((RCC->CTLR & RCC_PLLRDY) != (uint32_t)RCC_PLLRDY)
+    {
+    }
+
+    /* Select PLL Clock as SYSPLL clock source */
+    RCC->PLLCFGR &= (uint32_t)((uint32_t)~(RCC_SYSPLL_GATE)); 
+    RCC->PLLCFGR &= (uint32_t)((uint32_t)~(RCC_SYSPLL_SEL)); 
+
+    /* Wait till PLL is used as system clock source */
+    while ((RCC->PLLCFGR & (uint32_t)RCC_SYSPLL_SEL) != (uint32_t)0x00)
+    {
+    }
+
+    /* V5F core clock = SYSCLK */
+    RCC->CFGR0 &= (uint32_t)((uint32_t)~(RCC_HPRE));
+    RCC->CFGR0 |= (uint32_t)RCC_HPRE_DIV1; 
+
+    /* V3F core clock = HCLK = SYSCLK/2 */
+    RCC->CFGR0 &= (uint32_t)((uint32_t)~(RCC_FPRE));
+    RCC->CFGR0 |= (uint32_t)RCC_FPRE_DIV2;  
+
+    /* Select FLASH clock frequency*/
+    FLASH_Temp = FLASH->ACTLR;
+    FLASH_Temp &= ~((uint32_t)0x3);
+    FLASH_Temp |= FLASH_ACTLR_LATENCY_HCLK_DIV2;
+    FLASH->ACTLR = FLASH_Temp;
+
+    /* Select PLL as system clock source */
+    RCC->PLLCFGR |= (uint32_t)RCC_SYSPLL_GATE; 
+    RCC->CFGR0 &= (uint32_t)((uint32_t)~(RCC_SW));
+    RCC->CFGR0 |= (uint32_t)RCC_SW_PLL;    
+
+    /* Wait till PLL is used as system clock source */
+    while ((RCC->CFGR0 & (uint32_t)RCC_SWS) != (uint32_t)0x08)
+    {
+    }
+
+  }
+  else
+  { 
+        /* If HSE fails to start-up, the application will have wrong clock
+     * configuration. User can add here some code to deal with this error 
+         */
+  }  
+}
 #endif

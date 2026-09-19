@@ -14,7 +14,7 @@ void DMA1_Channel1_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast
 #define SCDCntthreshold        255 
 
 #define FLT_OverSample         128   /* 2.048M/128过采样=16K采样率*/
-#define ClkoutDiv              195 /* 400M/195分频=2.048M */
+#define ClkoutDiv              144 /* 295M/144分频=2.0486M */
 
 #define SAMPLE_RATE (16000)
 
