@@ -11,6 +11,8 @@
 #include "sai_spk.h"
 #include "wav.h"
 #include <stdio.h>
+#include "adc_echo.h"
+#include "gpio.h"
 
 static int s_mic_rec_flag = 0;
 static int16_t* s_mic_rec_buffer=0;
@@ -24,17 +26,18 @@ static int s_spk_play_total_samps=0;
 static int s_spk_play_current_samps=0;
 static int s_spk_data_chnum=2;
 
-static void mic_rec_handle(int16_t* micleft, int16_t* micright, int samps)
+static void mic_rec_handle(int16_t* micleft, int16_t* micright, int16_t* echo, int samps)
 {
     if(s_mic_rec_flag){
         for(int i=0; i<samps; i++){
             *s_mic_rec_buffer++ = micleft[i]; 
             *s_mic_rec_buffer++ = micright[i]; 
+            *s_mic_rec_buffer++ = echo[i]; 
         }
         s_mic_rec_current_samps += samps;
         if(s_mic_rec_current_samps >= s_mic_rec_total_samps){
             s_mic_rec_flag = 0;
-            xprintf("[MICREC]:len %d\r\n",44+2*s_mic_rec_total_samps*16/8);
+            xprintf("[MICREC]:len %d\r\n",44+3*s_mic_rec_total_samps*16/8);
         }
     }
 }
@@ -120,7 +123,7 @@ void spk_play_start(uint32_t addr)
 
 void mic_rec_start(uint32_t addr, int samples)
 {
-    int chnum = 2;
+    int chnum = 3;
     int freq = 16000;
     s_mic_rec_buffer = (int16_t*)(addr+44);
     s_mic_rec_total_samps = samples;
@@ -223,6 +226,9 @@ void shell_write_cb(uint8_t *buff, uint32_t len)
 static __attribute__((aligned(32))) int16_t PDM_LeftTmpBuffer[BufferSize] = {0}; 
 /* Right tmp data  */
 static __attribute__((aligned(32))) int16_t PDM_RightTmpBuffer[BufferSize] = {0}; 
+/* Echo tmp data  */
+static __attribute__((aligned(32))) int16_t ECHO_TmpBuffer[BufferSize] = {0}; 
+
 
 int main(void)
 {
@@ -232,7 +238,7 @@ int main(void)
     AFIO->PCFR1 &= ~(0x7 << 24);
     //清SW_CFG[2:0]
     AFIO->PCFR1 |= (0x4 << 24); //100:关闭SWD，PB8/PB9 作普通功能/GPIO/AF
-
+    gpio_init();
     uart_init(0, 500000);
     shell_set_itf(shell_read_cb, shell_write_cb, (shell_cmd_cfg*)g_shell_cmd_list_ast, 1);
     xdev_out(xprintf_out_port);
@@ -248,18 +254,72 @@ int main(void)
     ///memtester_main((ulv*)0x60000000, 0xfffff, 0x2000000, 1);
     pdm_mic_init();
     sai_spk_init();  
+    adc_echo_init();
 	while(1)
 	{
         shell_exec();
         //pdm_mic_poll();
         uint32_t leftlen = pdm_mic_left_getlen();
         uint32_t rightlen = pdm_mic_right_getlen();
-        if((leftlen >= sizeof(PDM_LeftTmpBuffer)) && (rightlen >= sizeof(PDM_RightTmpBuffer))){
-            /* 有足够的数据 */
+        uint32_t echolen = adc_echo_getlen();
+
+        static int echo_over_run = 1;  /* 默认认为是SPK缓存中没有数据 */
+        static int left_over_run = 1;  /* 默认认为是SPK缓存中没有数据 */
+        static int right_over_run = 1;  /* 默认认为是SPK缓存中没有数据 */
+
+        int needsize;
+        if(echo_over_run){
+            needsize = sizeof(ECHO_TmpBuffer);
+        }else{
+            needsize = sizeof(ECHO_TmpBuffer)*2;
+        }
+        if(echolen < needsize){
+           echo_over_run = 1;
+           /* 数据不够写0 */ 
+           //memset( (uint8_t*)ECHO_TmpBuffer,0,sizeof(ECHO_TmpBuffer));
+        }else{
+            echo_over_run = 0;
+            /* 数据够 从FIFO中取出数据 */
+            //adc_echo_get((uint8_t*)ECHO_TmpBuffer,sizeof(ECHO_TmpBuffer));
+        }
+
+        if(left_over_run){
+            needsize = sizeof(PDM_LeftTmpBuffer);
+        }else{
+            needsize = sizeof(PDM_LeftTmpBuffer)*2;
+        }
+        if(leftlen < needsize){
+           left_over_run = 1;
+           /* 数据不够写0 */ 
+           //memset( (uint8_t*)PDM_LeftTmpBuffer,0,sizeof(PDM_LeftTmpBuffer));
+        }else{
+            left_over_run = 0;
+            /* 数据够 从FIFO中取出数据 */
+            //pdm_mic_left_get((uint8_t*)PDM_LeftTmpBuffer,sizeof(PDM_LeftTmpBuffer));
+        }
+
+        if(right_over_run){
+            needsize = sizeof(PDM_RightTmpBuffer);
+        }else{
+            needsize = sizeof(PDM_RightTmpBuffer)*2;
+        }
+        if(rightlen < needsize){
+           right_over_run = 1;
+           /* 数据不够写0 */ 
+           //memset( (uint8_t*)PDM_RightTmpBuffer,0,sizeof(PDM_RightTmpBuffer));
+        }else{
+            right_over_run = 0;
+            /* 数据够 从FIFO中取出数据 */
+            //pdm_mic_right_get((uint8_t*)PDM_RightTmpBuffer,sizeof(PDM_RightTmpBuffer));
+        }
+
+        //xprintf("mic get data %d\r\n",systick_get_cnt());
+        if((left_over_run == 0) && (right_over_run == 0) && (echo_over_run == 0)){
+            ///xprintf("data handle %d %d\r\n", echolen, systick_get_cnt());
             pdm_mic_left_get((uint8_t*)PDM_LeftTmpBuffer,sizeof(PDM_LeftTmpBuffer));
             pdm_mic_right_get((uint8_t*)PDM_RightTmpBuffer,sizeof(PDM_RightTmpBuffer));
-            //xprintf("mic get data %d\r\n",systick_get_cnt());
-            mic_rec_handle(PDM_LeftTmpBuffer,PDM_RightTmpBuffer,BufferSize);
+            adc_echo_get((uint8_t*)ECHO_TmpBuffer,sizeof(ECHO_TmpBuffer));
+            mic_rec_handle(PDM_LeftTmpBuffer,PDM_RightTmpBuffer,ECHO_TmpBuffer,BufferSize);
         }
         spk_play_handle();
         //xprintf("1111\r\n");

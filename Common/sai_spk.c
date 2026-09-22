@@ -4,7 +4,7 @@
 #include "xprintf.h"
 #include "systick.h"
 #include "math.h"
-
+#include "gpio.h"
 
 
 void DMA1_Channel3_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
@@ -192,6 +192,7 @@ void DMA1_Channel3_IRQHandler(void)
 {
     ///uint32_t intreg = DMA1->INTFR;
     ///xprintf("dma1_ch3 %d %x\r\n",systick_get_cnt(),intreg);
+    //gpio_toggle(1);
     if(DMA_GetITStatus(DMA1, DMA1_IT_HT3) == SET){
         ///xprintf("ht:%d\r\n",systick_get_cnt());
         /* half中断数据前半段已经发送完 写后半部 */

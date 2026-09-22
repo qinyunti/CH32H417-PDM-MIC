@@ -3,6 +3,7 @@
 #include "fifo.h"
 #include "xprintf.h"
 #include "systick.h"
+#include "gpio.h"
 void DMA1_Channel2_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 void DMA1_Channel1_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 
@@ -14,7 +15,7 @@ void DMA1_Channel1_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast
 #define SCDCntthreshold        255 
 
 #define FLT_OverSample         128   /* 2.048M/128过采样=16K采样率*/
-#define ClkoutDiv              144 /* 295M/144分频=2.0486M */
+#define ClkoutDiv              143 /* 295M/144分频=2.0486M */
 
 #define SAMPLE_RATE (16000)
 
@@ -191,6 +192,7 @@ void DMA1_Channel2_IRQHandler(void)
     uint32_t wlen;
     //uint32_t intreg = DMA1->INTFR;
     //xprintf("dma1_ch2 %d %x\r\n",systick_get_cnt(),intreg);
+    //gpio_toggle(1);
     if(DMA_GetITStatus(DMA1, DMA1_IT_HT2) == SET){
         /* get the PCM stereo data , half中断数据位于前半段 */
         for(i = 0; i < BufferSize / 2; i++) {
@@ -240,6 +242,7 @@ void DMA1_Channel1_IRQHandler(void)
     uint32_t wlen;
     //uint32_t intreg = DMA1->INTFR;
     //xprintf("dma1_ch1 %d %x\r\n",systick_get_cnt(),intreg);
+    //gpio_toggle(1);
     if(DMA_GetITStatus(DMA1, DMA1_IT_HT1) == SET){
         /* get the PCM stereo data , half中断数据位于前半段 */
         for(i = 0; i < BufferSize / 2; i++) {
