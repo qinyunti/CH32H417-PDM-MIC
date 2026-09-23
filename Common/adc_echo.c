@@ -84,6 +84,7 @@ void  adc_echo_function_init(void)
 	ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T3_TRGO;
 	ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
 	ADC_InitStructure.ADC_NbrOfChannel = 1;
+  ADC_InitStructure.ADC_Pga = ADC_Pga_1;  //1 4 16 64
 	ADC_Init(ADC1, &ADC_InitStructure);
   ADC_LowPowerModeCmd(ADC1,DISABLE); 
 
@@ -92,7 +93,7 @@ void  adc_echo_function_init(void)
   ADC_DMACmd(ADC1, ENABLE);
   ADC_BufferCmd(ADC1, ENABLE);
 
-  ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_CyclesMode5);
+  ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_CyclesMode7);
   ADC_ExternalTrigConvCmd(ADC1, ENABLE);
 
   ADC_ResetCalibration(ADC1);
@@ -134,7 +135,6 @@ void  adc_echo_dma_init(uint32_t memadr, uint16_t bufsize)
 
 void adc_echo_tim_init(void)
 {
-  //TIM_OCInitTypeDef       TIM_OCInitStructure = {0};
   TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure = {0};
 
   RCC_HB1PeriphClockCmd(RCC_HB1Periph_TIM3,ENABLE);
@@ -146,14 +146,6 @@ void adc_echo_tim_init(void)
   TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
   TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStructure);
 
-  //TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
-  //TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  //TIM_OCInitStructure.TIM_Pulse = 9218/2;
-  //TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
-  //TIM_OC1Init(TIM3, &TIM_OCInitStructure);
-
-  //TIM_CtrlPWMOutputs(TIM3, ENABLE);
-  //TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Disable);
   TIM_ARRPreloadConfig(TIM3, ENABLE);  /* 自动重载值寄存器 */
   TIM_SelectMasterSlaveMode(TIM3, TIM_MasterSlaveMode_Enable);
   TIM_SelectOutputTrigger(TIM3, TIM_TRGOSource_Update);
@@ -164,10 +156,8 @@ void adc_echo_init(void)
 {
   adc_echo_gpio_init();
   adc_echo_function_init();
-  //ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_CyclesMode5);
   adc_echo_dma_init((uint32_t)Echo_Data, Echo_OneShotSamps);
   adc_echo_tim_init();
-	///ADC_SoftwareStartConvCmd(ADC1, ENABLE);
 }
 
 static int over_run_print_flag=0;
